@@ -39,9 +39,6 @@
     <AssemblyOriginatorKeyFile>Memento.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Fasterflect">
-      <HintPath>packages\fasterflect.2.1.0\lib\net40\Fasterflect.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -51,24 +48,20 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Events\AtomicEvent.cs" />
     <Compile Include="Events\BatchEvent.cs" />
     <Compile Include="Events\ElementAdditionEvent.cs" />
     <Compile Include="Events\ElementIndexChangeEvent.cs" />
     <Compile Include="Events\ElementRemovalEvent.cs" />
-    <Compile Include="Events\IEvent.cs" />
+    <Compile Include="Events\BaseEvent.cs" />
+    <Compile Include="MementorExtensions.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Mementor.cs" />
     <Compile Include="MementorChangedEventArgs.cs" />
     <Compile Include="MementorChanged.cs" />
     <Compile Include="Events\PropertyChangeEvent.cs" />
-    <Compile Include="Utils.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Memento.snk" />
-    <None Include="packages.config">
-      <SubType>Designer</SubType>
-    </None>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

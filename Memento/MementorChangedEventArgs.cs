@@ -8,6 +8,6 @@ namespace Memento
         /// <summary>
         /// The event associated with the the event.
         /// </summary>
-        public IEvent Event { get; set; }
+        public BaseEvent Event { get; set; }
     }
 }

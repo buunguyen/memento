@@ -1,9 +1,9 @@
 ﻿namespace Memento.Test.Stubs
 {
-
-    class Circle
+    internal class Circle
     {
         private Point _center;
+
         public Point Center
         {
             get { return _center; }
@@ -15,6 +15,7 @@
         }
 
         private int _radius;
+
         public int Radius
         {
             get { return _radius; }
@@ -25,5 +26,4 @@
             }
         }
     }
-
 }

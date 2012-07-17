@@ -1,16 +1,12 @@
 namespace Memento
 {
     using System;
-    using System.Collections.Generic;
-    using System.Linq.Expressions;
-    using Fasterflect;
 
     /// <summary>
     /// Provides undo and redo services.
     /// </summary>
     public class Mementor : IDisposable
     {
-#region Fields & Creation
         /// <summary>
         /// Fired after an undo or redo is performed.
         /// </summary>
@@ -33,141 +29,55 @@ namespace Memento
         {
             IsTrackingEnabled = isEnabled;
         }
-#endregion
 
-#region Implements IDisposable
-        public void Dispose()
-        {
-            Changed = null;
-            _undoStack.Clear();
-            _redoStack.Clear();
-            _currentBatch = null;
-        }
-#endregion
+        #region Core
 
-        #region Implements IUndoService
         /// <summary>
-        /// Marks a property change. 
+        /// Marks an event. This method also serves as an extensibility point for custom events.
         /// </summary>
-        /// <typeparam name="TProp">The type of the property.</typeparam>
-        /// <param name="target">The target object.</param>
-        /// <param name="propertySelector">The property selector expression.</param>
-        /// <param name="previousValue">The value to be restored to when undo. 
-        /// If not supplied, will be retrieved directly from the <paramref name="target"/>.</param>
-        public void PropertyChange<TProp>(object target, Expression<Func<TProp>> propertySelector, object previousValue = null)
+        /// <param name="anEvent">The event to be marked.</param>
+        public void MarkEvent(BaseEvent anEvent)
         {
-            PropertyChange(target, propertySelector.Name(), previousValue);
+            if (!IsTrackingEnabled) return;
+            if (anEvent == null) throw new ArgumentNullException("anEvent");
+            (_currentBatch ?? _undoStack).Push(anEvent);
+            if (!IsInBatch) PerformPostMarkAction(anEvent);
         }
 
         /// <summary>
-        /// Marks a property change.
+        /// Marks a batch during which all events are combined so that <see cref="Undo"/> only needs calling once.
         /// </summary>
-        /// <param name="target">The target object.</param>
-        /// <param name="propertyName">The name of the property.</param>
-        /// <param name="previousValue">The value to be restored to when undo. 
-        /// If not supplied, will be retrieved directly from the <paramref name="target"/>.</param>
-        public void PropertyChange(object target, string propertyName, object previousValue = null)
-        {
-            if (!CheckPreconditions(target, "target", propertyName, "propertyName"))
-                return;
-
-            LogPropertyChange(_currentBatch ?? _undoStack, target, propertyName, previousValue);
-
-            if (!IsInBatch)
-                PerformLogPostAction();
-        }
-
-        /// <summary>
-        /// Marks a collection addition. 
-        /// </summary>
-        /// <typeparam name="T">The generic type parameter of the collection.</typeparam>
-        /// <param name="collection">The collection object.</param>
-        /// <param name="element">The element being added.</param>
-        public void ElementAdd<T>(IList<T> collection, object element)
-        {
-            if (!CheckPreconditions(collection, "collection")) 
-                return;
-
-            LogElementAdd(_currentBatch ?? _undoStack, collection, element);
-
-            if (!IsInBatch)
-                PerformLogPostAction();
-        }
-
-        /// <summary>
-        /// Marks a collection removal.
-        /// </summary>
-        /// <typeparam name="T">The generic type parameter of the collection.</typeparam>
-        /// <param name="collection">The collection object.</param>
-        /// <param name="element">The element being removed</param>
-        /// <param name="elementIndex">The index of the element being removed. If not supplied, will retrieve via IndexOf.</param>
-        public void ElementRemove<T>(IList<T> collection, object element, int? elementIndex = null)
-        {
-            if (!CheckPreconditions(collection, "collection"))
-                return;
-
-            LogElementRemove(_currentBatch ?? _undoStack, collection, element, elementIndex);
-
-            if (!IsInBatch)
-                PerformLogPostAction();
-        }
-
-        /// <summary>
-        /// Marks a collection index change.
-        /// </summary>
-        /// <typeparam name="T">The generic type parameter of the collection.</typeparam>
-        /// <param name="collection">The collection object.</param>
-        /// <param name="element">The element whose index is being changed</param>
-        /// <param name="elementIndex">The index of the element whose index is being changed. If not supplied, will retrieve via IndexOf.</param>
-        public void ElementIndexChange<T>(IList<T> collection, object element, int? elementIndex = null)
-        {
-            if (!CheckPreconditions(collection, "collection")) 
-                return;
-
-            LogElementIndexChange(_currentBatch ?? _undoStack, collection, element, elementIndex);
-
-            if (!IsInBatch)
-                PerformLogPostAction();
-        }
-
-        /// <summary>
-        /// Marks a batch during which all events are combined so that when undo, only need to invoke 
-        /// <see cref="Undo"/> once.
-        /// </summary>
-        /// <param name="codeBlock">The code block. Calls to <see cref="ElementAdd{T}"/>, <see cref="PropertyChange{TProp}"/> etc. 
-        /// should happen in this block.</param>
+        /// <param name="codeBlock">The code block performing batch change marking.</param>
         /// <seealso cref="BeginBatch"/>
         /// <remarks>Batches cannot be nested. At any point, there must be only one active batch.</remarks>
         public void Batch(Action codeBlock)
         {
-            if (!CheckPreconditions(codeBlock, "codeBlock")) 
-                return;
+            if (!IsTrackingEnabled) return;
+            if (codeBlock == null) throw new ArgumentNullException("codeBlock");
 
             BeginBatch();
-            try
-            {
+            try {
                 codeBlock();
             }
-            finally
-            {
+            finally {
                 // Must not call EndBatch() because CheckPreconditions() might return false
-                if (InternalEndBatch(_undoStack))
-                    PerformLogPostAction();
+                BatchEvent @event = InternalEndBatch(_undoStack);
+                if (@event != null)
+                    PerformPostMarkAction(@event);
             }
         }
 
         /// <summary>
-        /// Explicitly marks the beginning of a batch.
+        /// Explicitly marks the beginning of a batch. Use this instead of <see cref="Batch"/>
+        /// changes can be made in different places instead of inside one certain block of code.
+        /// When finish, end the batch by invoking <see cref="EndBatch"/>.
         /// </summary>
         public void BeginBatch()
         {
-            if (!CheckPreconditions())
-                return;
+            if (!IsTrackingEnabled) return;
+            if (IsInBatch) throw new InvalidOperationException("Re-entrant batch is not supported");
 
-            if (IsInBatch)
-                throw new InvalidOperationException("Re-entrant batch is not supported");
-
-            InternalBeginBatch();
+            _currentBatch = new BatchEvent();
         }
 
         /// <summary>
@@ -175,30 +85,28 @@ namespace Memento
         /// </summary>
         public void EndBatch()
         {
-            if (!CheckPreconditions())
-                return;
+            if (!IsTrackingEnabled) return;
+            if (IsInBatch) throw new InvalidOperationException("A batch has not been started yet");
 
-            if (IsInBatch)
-                throw new InvalidOperationException("A batch has not been started yet");
-
-            if (InternalEndBatch(_undoStack))
-                PerformLogPostAction();
+            BatchEvent @event = InternalEndBatch(_undoStack);
+            if (@event != null)
+                PerformPostMarkAction(@event);
         }
 
         /// <summary>
         /// Executes the supplied code block with <see cref="IsTrackingEnabled"/> turned off.
         /// </summary>
         /// <param name="codeBlock">The code block to be executed.</param>
-        public void ExecuteNoTracking(Action codeBlock)
+        /// <seealso cref="IsTrackingEnabled"/>
+        public void ExecuteNoTrack(Action codeBlock)
         {
+            var previousState = IsTrackingEnabled;
             IsTrackingEnabled = false;
-            try
-            {
+            try {
                 codeBlock();
             }
-            finally
-            {
-                IsTrackingEnabled = true;
+            finally {
+                IsTrackingEnabled = previousState;
             }
         }
 
@@ -211,9 +119,8 @@ namespace Memento
             if (IsInBatch) throw new InvalidOperationException("Finish the active batch first");
 
             var @event = _undoStack.Pop();
-            IEvent tmpEvent = @event is BatchEvent ? new BatchEvent((BatchEvent) @event) : @event;
-            ReverseEvent(@event, true);
-            NotifyChange(tmpEvent);
+            RollbackEvent(@event is BatchEvent ? new BatchEvent((BatchEvent) @event) : @event, true);
+            NotifyChange(@event);
         }
 
         /// <summary>
@@ -225,9 +132,8 @@ namespace Memento
             if (IsInBatch) throw new InvalidOperationException("Finish the active batch first");
 
             var @event = _redoStack.Pop();
-            IEvent tmpEvent = @event is BatchEvent ? new BatchEvent((BatchEvent)@event) : @event;
-            ReverseEvent(@event, false);
-            NotifyChange(tmpEvent);
+            RollbackEvent(@event is BatchEvent ? new BatchEvent((BatchEvent) @event) : @event, false);
+            NotifyChange(@event);
         }
 
         /// <summary>
@@ -265,6 +171,7 @@ namespace Memento
         /// <summary>
         /// If <c>true</c>, all calls to mark changes are ignored.
         /// </summary>
+        /// <seealso cref="ExecuteNoTrack"/>
         public bool IsTrackingEnabled { get; set; }
 
         /// <summary>
@@ -276,175 +183,73 @@ namespace Memento
         }
 
         /// <summary>
-        /// Resets the state of this <see cref="Mementor"/> object.
+        /// Resets the state of this <see cref="Mementor"/> object to its initial state.
+        /// This effectively clears the redo stack, undo stack and current batch (if one is active).
         /// </summary>
         public void Reset()
         {
+            bool shouldNotify = UndoCount > 0 || RedoCount > 0;
             _undoStack.Clear();
             _redoStack.Clear();
             _currentBatch = null;
             IsTrackingEnabled = true;
-            NotifyChange();
+            if (shouldNotify) NotifyChange(null);
         }
-#endregion
 
-#region Private
-        private void ReverseEvent(IEvent @event, bool undoing)
+        /// <summary>
+        /// Disposes the this mementor and clears redo and undo stacks.
+        /// This method won't fire <see cref="Changed"/> event.
+        /// </summary>
+        public void Dispose()
         {
-            if (@event is BatchEvent)
-            {
-                BeginBatch();
-                try
-                {
-                    var batch = (BatchEvent)@event;
-                    while (batch.Count > 0)
-                    {
-                        var concreteChange = (AtomicEvent)batch.Pop();
-                        ReverseEvent(concreteChange, true /* doesn't matter what this value is */);
-                    }
-                }
-                finally
-                {
-                    InternalEndBatch(undoing ? _redoStack : _undoStack);
-                }
-            }
-            else
-            {
-                var stackToUse = _currentBatch ?? (undoing ? _redoStack : _undoStack);
-                if (@event is PropertyChangeEvent)
-                {
-                    var pce = (PropertyChangeEvent)@event;
-                    LogPropertyChange(
-                        stackToUse, 
-                        pce.TargetObject, 
-                        pce.PropertyName, 
-                        pce.TargetObject.GetPropertyValue(pce.PropertyName));
-                    ExecuteNoTracking(()
-                        => pce.TargetObject.SetPropertyValue(pce.PropertyName, pce.PropertyValue));
-                }
+            Changed = null;
+            _undoStack.Clear();
+            _redoStack.Clear();
+            _currentBatch = null;
+        }
 
-                else if (@event is ElementAdditionEvent)
-                {
-                    var eae = (ElementAdditionEvent)@event;
-                    LogElementRemove(stackToUse, eae.TargetObject, eae.Element);
-                    ExecuteNoTracking(() => eae.TargetObject.CallMethod("Remove",
-                                      new[] { eae.TargetObject.GetType().GetGenericArguments()[0] },
-                                      eae.Element));
-                }
+        #endregion
 
-                else if (@event is ElementRemovalEvent)
-                {
-                    var ere = (ElementRemovalEvent)@event;
-                    LogElementAdd(stackToUse, ere.TargetObject, ere.Element);
-                    ExecuteNoTracking(() => ere.TargetObject.CallMethod("Insert", ere.Index, ere.Element));
-                }
+        #region Private
 
-                else if (@event is ElementIndexChangeEvent)
-                {
-                    var epce = (ElementIndexChangeEvent)@event;
-                    var collection = epce.TargetObject;
-                    var element = epce.Element;
-                    LogElementIndexChange(stackToUse, collection, element);
-                    ExecuteNoTracking(() => {
-                        collection.CallMethod("Remove", element);
-                        collection.CallMethod("Insert", epce.Index, element);
-                    });
-                }
-
-                else
-                {
-                    throw new ArgumentException("Not supported event type");
-                }
+        private void RollbackEvent(BaseEvent @event, bool undoing)
+        {
+            bool isBatch = @event is BatchEvent;
+            var stack = undoing ? _redoStack : _undoStack;
+            if (isBatch) BeginBatch();
+            try {
+                ExecuteNoTrack(() => {
+                    foreach (var reverseEvent in @event.Rollback())
+                        (_currentBatch ?? stack).Push(reverseEvent);
+                });
+            } 
+            finally {
+                if (isBatch) InternalEndBatch(stack);
             }
         }
 
-        private void LogPropertyChange(BatchEvent batch, object target, string propertyName, object previousValue)
+        private BatchEvent InternalEndBatch(BatchEvent stack)
         {
-            previousValue = previousValue ?? target.GetPropertyValue(propertyName);
-
-            batch.Push(new PropertyChangeEvent
-            {
-                TargetObject = target,
-                PropertyName = propertyName,
-                PropertyValue = previousValue
-            });
-        }
-
-        private void LogElementAdd(BatchEvent batch, object collection, object element)
-        {
-            batch.Push(new ElementAdditionEvent
-            {
-                TargetObject = collection,
-                Element = element
-            });
-        }
-
-        private void LogElementRemove(BatchEvent batch, object collection, object element, int? index = null)
-        {
-            index = index ?? (int)collection.CallMethod("IndexOf", element);
-            if (index == -1)
-                throw new ArgumentException("Must provide a valid index if element does not exist in the collection");
-            
-            batch.Push(new ElementRemovalEvent
-            {
-                TargetObject = collection,
-                Element = element,
-                Index = index.Value
-            });
-        }
-
-        private void LogElementIndexChange(BatchEvent batch, object collection, object element, int? index = null)
-        {
-            index = index ?? (int)collection.CallMethod("IndexOf", element);
-            if (index == -1) 
-                throw new ArgumentException("Must provide a valid index if element does not exist in the collection");
-            
-            batch.Push(new ElementIndexChangeEvent 
-            {
-                TargetObject = collection,
-                Element = element,
-                Index = index.Value
-            });
-        }
-
-        private void InternalBeginBatch()
-        {
-            _currentBatch = new BatchEvent();
-        }
-
-        private bool InternalEndBatch(BatchEvent batch)
-        {
-            if (_currentBatch.Count > 0)
-            {
-                batch.Push(_currentBatch);
+            if (_currentBatch.Count > 0) {
+                var tmp = _currentBatch;
+                stack.Push(_currentBatch);
                 _currentBatch = null;
-                return true;
+                return tmp;
             }
-            return false;
+            return null;
         }
 
-        private bool CheckPreconditions(params object[] objects)
-        {
-            if (!IsTrackingEnabled) return false;
-
-            for (int i = 0; i < objects.Length; i += 2)
-                if (objects[i] == null) 
-                    throw new ArgumentNullException((string)objects[i + 1]);
-            
-            return true;
-        }
-
-        private void PerformLogPostAction()
+        private void PerformPostMarkAction(BaseEvent @event)
         {
             _redoStack.Clear();
-            NotifyChange();
+            NotifyChange(@event);
         }
 
-        private void NotifyChange(IEvent @event = null)
+        private void NotifyChange(BaseEvent @event)
         {
-            if (Changed != null)
-                Changed(this, new MementorChangedEventArgs { Event = @event });
+            if (Changed != null) Changed(this, new MementorChangedEventArgs {Event = @event});
         }
-#endregion
+
+        #endregion
     }
 }

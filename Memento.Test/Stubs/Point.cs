@@ -1,6 +1,6 @@
 ﻿namespace Memento.Test.Stubs
 {
-    struct Point
+    internal struct Point
     {
         public readonly int X;
         public readonly int Y;

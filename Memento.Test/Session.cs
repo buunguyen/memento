@@ -5,7 +5,7 @@
     /// or editor session, therefore there should be some centralized way to 
     /// get that instance.
     /// </summary>
-    static class Session
+    internal static class Session
     {
         public static Mementor Mementor;
 

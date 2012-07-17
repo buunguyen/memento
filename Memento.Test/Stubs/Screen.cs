@@ -2,7 +2,7 @@
 {
     using System.Collections.Generic;
 
-    class Screen
+    internal class Screen
     {
         public Screen()
         {

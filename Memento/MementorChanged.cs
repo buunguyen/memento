@@ -1,11 +1,11 @@
 namespace Memento
 {
     /// <summary>
-    /// Fired whenever there is a change in <see cref="Mementor"/>.
+    /// Fired whenever there is a change in either the undo or redo stack of a <see cref="Mementor"/> instance.
     /// Spefically, these actions will trigger this event:
     /// <list type="bullet">
-    /// <item><description>Any change logged by client code, e.g. property change, collection addition etc.</description></item>
-    /// <item><description><see cref="Mementor"/>'s: undo, redo, reset</description></item>
+    /// <item><description>Any change marked by client code</description></item>
+    /// <item><description><see cref="Mementor"/>'s: <see cref="Mementor.Undo"/>, <see cref="Mementor.Redo"/> and possibly <see cref="Mementor.Reset"/> unless the undo and redo stacks are already empty.</description></item>
     /// </list>
     /// </summary>
     /// <param name="sender">The firing mementor object.</param>
