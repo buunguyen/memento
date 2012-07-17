@@ -1,6 +1,16 @@
-# Build Folders (you can keep bin if you'd like, to store dlls and pdbs)
+# MSBuild
 bin
 obj
 
-# mstest test results
+# MSTest
 TestResults
+
+# ReSharper
+_ReSharper.*
+
+# Users
+*.user
+*.suo
+
+# NuGet
+*.nupkg

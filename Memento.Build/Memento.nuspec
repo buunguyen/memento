@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<package >
+  <metadata>
+    <id>Memento</id>
+    <version>1.0.0</version>
+    <authors>Buu Nguyen</authors>
+    <owners>Buu Nguyen</owners>
+    <licenseUrl>http://www.apache.org/licenses/LICENSE-2.0.html</licenseUrl>
+    <projectUrl>http://buunguyen.github.com/memento/</projectUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>Lightweight undo/redo library for .NET applications</description>
+    <copyright>Copyright 2012</copyright>
+    <tags>wpf winforms .net undo redo change-tracking</tags>
+    <dependencies>
+      <dependency id="fasterflect" version="[2.1.0]" />
+    </dependencies>
+  </metadata>
+</package>
