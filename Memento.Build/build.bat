@@ -27,8 +27,6 @@ xcopy Memento.nuspec ..\Memento\bin\Release\
 mkdir ..\Memento\bin\Release\lib\net40\ 
 move /Y ..\Memento\bin\Release\Memento.dll ..\Memento\bin\Release\lib\net40\
 move /Y ..\Memento\bin\Release\Memento.xml ..\Memento\bin\Release\lib\net40\
-del ..\Memento\bin\Release\Fasterflect.dll
-del ..\Memento\bin\Release\Fasterflect.xml
 nuget pack ..\Memento\bin\Release\Memento.nuspec
 
 :VERSION
