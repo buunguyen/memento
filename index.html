@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <link href='https://fonts.googleapis.com/css?family=Chivo:900' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen" />
+    <link rel="stylesheet" type="text/css" href="stylesheets/pygment_trac.css" media="screen" />
+    <link rel="stylesheet" type="text/css" href="stylesheets/print.css" media="print" />
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <title>Memento by buunguyen</title>
+  </head>
+
+  <body>
+    <div id="container">
+      <div class="inner">
+
+        <header>
+          <h1>Memento</h1>
+          <h2>Lightweight and Extensible Undo Framework for .NET</h2>
+        </header>
+
+        <section id="downloads" class="clearfix">
+          <a href="https://github.com/buunguyen/memento/zipball/master" id="download-zip" class="button"><span>Download .zip</span></a>
+          <a href="https://github.com/buunguyen/memento/tarball/master" id="download-tar-gz" class="button"><span>Download .tar.gz</span></a>
+          <a href="https://github.com/buunguyen/memento" id="view-on-github" class="button"><span>View on GitHub</span></a>
+        </section>
+
+        <hr>
+
+        <section id="main_content">
+          <h1>About</h1>
+
+<p>Memento is a lightweight and extensible undo framework for .NET applications.
+It provide undo and redo support for the following events(*) out of the box:  </p>
+
+<ul>
+<li>Property change</li>
+<li>Collection element addition</li>
+<li>Collection element removal</li>
+<li>Collection element's index change</li>
+</ul><p>While these basic events have proved to be sufficient for most applications I've worked with, 
+Memento allows you to build custom events and plug into the framework.</p>
+
+<p><strong>Note</strong>: <em>events</em> here mean those actions that cause changes to the system state, e.g. change
+value of a property etc. They are not .NET events.</p>
+
+<h1>Getting Started</h1>
+
+<p>Install from NuGet</p>
+
+<div class="highlight">
+<pre><span class="n">Install</span><span class="p">-</span><span class="n">Package</span> <span class="n">Memento</span>
+</pre>
+</div>
+
+
+<p>Create an instance of a <code>Mementor</code>. </p>
+
+<div class="highlight">
+<pre><span class="kt">var</span> <span class="n">mementor</span> <span class="p">=</span> <span class="n">Mementor</span><span class="p">.</span><span class="n">Create</span><span class="p">();</span>
+</pre>
+</div>
+
+
+<p><strong>Note</strong>: it's typically sufficient to use one single instance for an entire application. 
+But you can create multiple instances as needed and each of them has a different undo/redo
+stack. Regardless, make sure you store this instance somewhere easily accessible to other
+parts of code.</p>
+
+<h3>Mark property changes</h3>
+
+<div class="highlight">
+<pre><span class="c1">// Mark change via expression syntax</span>
+<span class="n">mementor</span><span class="p">.</span><span class="n">PropertyChange</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="p">()</span> <span class="p">=&gt;</span> <span class="n">shape</span><span class="p">.</span><span class="n">Radius</span><span class="p">);</span>
+
+<span class="c1">// Mark change via string name</span>
+<span class="n">mementor</span><span class="p">.</span><span class="n">PropertyChange</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="s">"Radius"</span><span class="p">);</span>
+
+<span class="c1">// Mark change with explicit property value (which will be restored to when undo)</span>
+<span class="n">mementor</span><span class="p">.</span><span class="n">PropertyChange</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="s">"Radius"</span><span class="p">,</span> <span class="m">10</span><span class="p">);</span>
+</pre>
+</div>
+
+
+<h3>Mark collection changes</h3>
+
+<div class="highlight">
+<pre><span class="c1">// Addition</span>
+<span class="n">mementor</span><span class="p">.</span><span class="n">ElementAdd</span><span class="p">(</span><span class="n">screen</span><span class="p">,</span> <span class="n">shape</span><span class="p">);</span>
+
+<span class="c1">// Removal</span>
+<span class="n">mementor</span><span class="p">.</span><span class="n">ElementRemove</span><span class="p">(</span><span class="n">screen</span><span class="p">,</span> <span class="n">shape</span><span class="p">);</span>
+
+<span class="c1">// Removal with explicit index (to be restored to when undo)</span>
+<span class="n">mementor</span><span class="p">.</span><span class="n">ElementRemove</span><span class="p">(</span><span class="n">screen</span><span class="p">,</span> <span class="n">shape</span><span class="p">,</span> <span class="n">index</span><span class="p">);</span>
+
+<span class="c1">// Index change</span>
+<span class="n">mementor</span><span class="p">.</span><span class="n">ElementIndexChange</span><span class="p">(</span><span class="n">screen</span><span class="p">,</span> <span class="n">shape</span><span class="p">);</span>
+
+<span class="c1">// Index change with explicit index (to be restored to when undo)</span>
+<span class="n">mementor</span><span class="p">.</span><span class="n">ElementIndexChange</span><span class="p">(</span><span class="n">screen</span><span class="p">,</span> <span class="n">shape</span><span class="p">,</span> <span class="n">index</span><span class="p">);</span>
+</pre>
+</div>
+
+
+<h3>Perform undo and redo</h3>
+
+<div class="highlight">
+<pre><span class="c1">// Undo the last event</span>
+<span class="k">if</span> <span class="p">(</span><span class="n">mementor</span><span class="p">.</span><span class="n">CanUndo</span><span class="p">)</span> <span class="n">mementor</span><span class="p">.</span><span class="n">Undo</span><span class="p">();</span>
+
+<span class="c1">// Redo a previous undo</span>
+<span class="k">if</span> <span class="p">(</span><span class="n">mementor</span><span class="p">.</span><span class="n">CanRedo</span><span class="p">)</span> <span class="n">mementor</span><span class="p">.</span><span class="n">Redo</span><span class="p">();</span>
+</pre>
+</div>
+
+
+<h3>Reset</h3>
+
+<p>At any point of time, you can reset a <code>Mementor</code> to its original state.</p>
+
+<div class="highlight">
+<pre><span class="n">mementor</span><span class="p">.</span><span class="n">Reset</span><span class="p">();</span>
+</pre>
+</div>
+
+
+<h3>Batch multiple changes</h3>
+
+<p>If you want to undo multiple events at once, batch them together.</p>
+
+<div class="highlight">
+<pre><span class="c1">// Batch via block</span>
+<span class="n">mementor</span><span class="p">.</span><span class="n">Batch</span><span class="p">(()</span> <span class="p">=&gt;</span> <span class="p">{</span>
+    <span class="c1">// change events happen here</span>
+<span class="p">});</span>
+
+<span class="c1">// Undo all events in the previous batch</span>
+<span class="n">mementor</span><span class="p">.</span><span class="n">Undo</span><span class="p">();</span> 
+
+<span class="c1">// Batch explicitly</span>
+<span class="n">mementor</span><span class="p">.</span><span class="n">BeginBatch</span><span class="p">();</span>
+<span class="c1">// ... sometime later</span>
+<span class="n">mementor</span><span class="p">.</span><span class="n">EndBatch</span><span class="p">();</span> 
+
+</pre>
+</div>
+
+
+<h3>Disable change marking</h3>
+
+<p>If you want to temporarily disable marking (effectively making <code>Mementor</code> ignores
+all calls to change marking methods like <code>PropertyChange</code>), do one of the followings.</p>
+
+<div class="highlight">
+<pre><span class="n">mementor</span><span class="p">.</span><span class="n">ExecuteNoTrack</span><span class="p">(()</span> <span class="p">=&gt;</span> <span class="p">{</span> 
+    <span class="c1">// changes happened in this block are ignored</span>
+<span class="p">});</span>
+
+<span class="n">mementor</span><span class="p">.</span><span class="n">IsTrackingEnabled</span> <span class="p">=</span> <span class="k">false</span><span class="p">;</span>
+</pre>
+</div>
+
+
+<h3>Event handling</h3>
+
+<p>You can be notified when there is change to the undo/redo stack of a <code>Mementor</code> 
+by handling its <code>Changed</code> event. For example if you call <code>Undo()</code>, this event
+will be fired with the associated undone event.</p>
+
+<div class="highlight">
+<pre><span class="n">mementor</span><span class="p">.</span><span class="n">Changed</span> <span class="p">+=</span> <span class="p">(</span><span class="n">_</span><span class="p">,</span> <span class="n">args</span><span class="p">)</span> <span class="p">=&gt;</span> <span class="p">{</span>
+    <span class="c1">// args allow you to access to the event associated with this notification</span>
+<span class="p">}</span>
+</pre>
+</div>
+
+
+<h3>Custom events</h3>
+
+<p>You can write your own custom event by extending <code>Memento.BaseEvent</code> class.
+Then you can use it with a <code>Mementor</code> as follows.</p>
+
+<div class="highlight">
+<pre><span class="n">mementor</span><span class="p">.</span><span class="n">MarkEvent</span><span class="p">(</span><span class="n">customEvent</span><span class="p">);</span>
+</pre>
+</div>
+
+
+<h3>Want to learn more?</h3>
+
+<p>The comprehensive test suite for Memento should be a good source of reference.</p>
+
+<h1>Contact</h1>
+
+<ul>
+<li>Email: <a href="mailto:buunguyen@gmail.com">buunguyen@gmail.com</a>
+</li>
+<li>Blog: <a href="http://www.buunguyen.net/blog">www.buunguyen.net</a>
+</li>
+<li>Twitter: <a href="https://twitter.com/buunguyen/">@buunguyen</a>
+</li>
+</ul>
+        </section>
+
+        <footer>
+          Memento is maintained by <a href="https://github.com/buunguyen">buunguyen</a><br>
+          This page was generated by <a href="http://pages.github.com">GitHub Pages</a>. Tactile theme by <a href="http://twitter.com/jasonlong">Jason Long</a>.
+        </footer>
+
+        
+      </div>
+    </div>
+  </body>
+</html>
