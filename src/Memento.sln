@@ -10,6 +10,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "misc", "misc", "{D1D42AE0-D
 		..\build\build.bat = ..\build\build.bat
 		..\build\Memento.nuspec = ..\build\Memento.nuspec
 		..\README.md = ..\README.md
+		..\TODO.md = ..\TODO.md
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "samples", "samples", "{3E89811B-E9F0-44D8-9E77-5EEA439EA9B4}"
