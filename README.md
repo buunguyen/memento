@@ -1,8 +1,8 @@
 About
 =======
 
-Memento is a lightweight and extensible undo/redo framework for .NET applications.
-It provide undo/redo support for the following events(*) out of the box:  
+Memento is a lightweight and extensible undo framework for .NET applications.
+It provide undo and redo support for the following events(*) out of the box:  
 
 * Property change
 * Collection element addition
