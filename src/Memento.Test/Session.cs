@@ -11,7 +11,7 @@
 
         public static Mementor New()
         {
-            return Mementor = Mementor.Create();
+            return Mementor = new Mementor();
         }
 
         public static void End()

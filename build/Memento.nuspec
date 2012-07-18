@@ -10,6 +10,6 @@
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>Lightweight and extensible undo framework for .NET</description>
     <copyright>Copyright 2012</copyright>
-    <tags>wpf winforms .net undo redo change-tracking</tags>
+    <tags>WPF MVVP WinForms WP7 Undo Redo INotifyPropertyChanging Change-Tracking</tags>
   </metadata>
 </package>

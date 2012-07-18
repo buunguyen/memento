@@ -9,10 +9,10 @@ goto:ENDBUILD
 :REBUILD
 
 echo 1. Build
-%MSBUILD% /t:Rebuild /p:Configuration=Release "..\Memento.sln"
+%MSBUILD% /t:Rebuild /p:Configuration=Release "..\src\Memento.sln"
 
 echo 2. Run tests
-%MSTEST% /testcontainer:..\Memento.Test\bin\Release\Memento.Test.dll /test:Memento.Test.Features
+%MSTEST% /testcontainer:..\src\Memento.Test\bin\Release\Memento.Test.dll /test:Memento.Test.Features
 :ENDBUILD
 
 rem ************** NuGet ************** 
@@ -23,11 +23,11 @@ goto:EOF
 :NUGET
 NOTEPAD Memento.nuspec
 echo 3. Create NuGet package
-xcopy Memento.nuspec ..\Memento\bin\Release\
-mkdir ..\Memento\bin\Release\lib\net40\ 
-move /Y ..\Memento\bin\Release\Memento.dll ..\Memento\bin\Release\lib\net40\
-move /Y ..\Memento\bin\Release\Memento.xml ..\Memento\bin\Release\lib\net40\
-nuget pack ..\Memento\bin\Release\Memento.nuspec
+xcopy Memento.nuspec ..\src\Memento\bin\Release\
+mkdir ..\src\Memento\bin\Release\lib\net40\ 
+move /Y ..\src\Memento\bin\Release\Memento.dll ..\src\Memento\bin\Release\lib\net40\
+move /Y ..\src\Memento\bin\Release\Memento.xml ..\src\Memento\bin\Release\lib\net40\
+nuget pack ..\src\Memento\bin\Release\Memento.nuspec
 
 :VERSION
 set /P VERSION=Enter version: 

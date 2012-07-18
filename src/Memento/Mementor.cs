@@ -19,13 +19,8 @@ namespace Memento
         /// <summary>
         /// Creates an instance of <see cref="Mementor"/>.
         /// </summary>
-        /// <returns>A new instance of <see cref="Mementor"/>.</returns>
-        public static Mementor Create()
-        {
-            return new Mementor(true);
-        }
-
-        private Mementor(bool isEnabled)
+        /// <param name="isEnabled">Whether this instance is enabled or not.</param>
+        public Mementor(bool isEnabled = true)
         {
             IsTrackingEnabled = isEnabled;
         }

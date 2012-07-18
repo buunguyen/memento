@@ -9,8 +9,10 @@
             get { return _center; }
             set
             {
-                Session.Mementor.PropertyChange(this, () => Center);
-                _center = value;
+                if (_center != value) {
+                    Session.Mementor.PropertyChange(this, () => Center);
+                    _center = value;
+                }
             }
         }
 
@@ -21,8 +23,10 @@
             get { return _radius; }
             set
             {
-                Session.Mementor.PropertyChange(this, () => Radius);
-                _radius = value;
+                if (_radius != value) {
+                    Session.Mementor.PropertyChange(this, () => Radius);
+                    _radius = value;
+                }
             }
         }
     }
