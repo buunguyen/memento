@@ -24,7 +24,7 @@ Install-Package Memento
 ```
 
 Create an instance of a `Mementor`. 
-```
+```csharp
 var mementor = Mementor.Create();
 ```
 **Note**: it's typically sufficient to use one single instance for an entire application. 
@@ -33,7 +33,7 @@ stack. Regardless, make sure you store this instance somewhere easily accessible
 parts of code.
 
 ### Mark Property Changes
-```
+```csharp
 // Mark change via expression syntax
 mementor.PropertyChange(shape, () => shape.Radius);
 
@@ -45,7 +45,7 @@ mementor.PropertyChange(shape, "Radius", 10);
 ```
 
 ### Mark Collection Changes
-```
+```csharp
 // Addition
 mementor.ElementAdd(screen, shape);
 
@@ -62,7 +62,7 @@ mementor.ElementIndexChange(screen, shape);
 mementor.ElementIndexChange(screen, shape, index);
 ```
 ### Perform Undo and Redo
-```
+```csharp
 // Undo the last event
 if (mementor.CanUndo) mementor.Undo();
 
@@ -73,14 +73,14 @@ if (mementor.CanRedo) mementor.Redo();
 ### Reset
 
 At any point of time, you can reset a `Mementor` to its original state.
-```
+```csharp
 mementor.Reset();
 ```
 
 ### Batch Marking
 
 If you want to undo multiple events at once, batch them together.
-```
+```csharp
 // Batch via block
 mementor.Batch(() => {
 	// change events happen here
@@ -100,7 +100,7 @@ mementor.EndBatch();
 
 If you want to temporarily disable marking (effectively making `Mementor` ignores
 all calls to change marking methods like `PropertyChange`), do one of the followings.
-```
+```csharp
 mementor.ExecuteNoTrack(() => { 
 	// changes happened in this block are ignored
 });
@@ -113,7 +113,7 @@ mementor.IsTrackingEnabled = false;
 You can be notified when there is change to the undo/redo stack of a `Mementor` 
 by handling its `Changed` event. For example if you call `Undo()`, this event
 will be fired with the associated undone event.
-```
+```csharp
 mementor.Changed += (_, args) => {
 	// args allow you to access to the event associated with this notification
 }
@@ -123,7 +123,7 @@ mementor.Changed += (_, args) => {
 
 You can write your own custom event by extending `Memento.BaseEvent` class.
 Then you can use it with a `Mementor` as follows.
-```
+```csharp
 mementor.MarkEvent(customEvent);
 ```
 
