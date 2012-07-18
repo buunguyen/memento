@@ -19,7 +19,7 @@ Getting Started
 =======
 
 Install from NuGet
-```
+```csharp
 Install-Package Memento
 ```
 
@@ -32,7 +32,7 @@ But you can create multiple instances as needed and each of them has a different
 stack. Regardless, make sure you store this instance somewhere easily accessible to other
 parts of code.
 
-### Mark Property Changes
+### Mark property changes
 ```csharp
 // Mark change via expression syntax
 mementor.PropertyChange(shape, () => shape.Radius);
@@ -44,7 +44,7 @@ mementor.PropertyChange(shape, "Radius");
 mementor.PropertyChange(shape, "Radius", 10);
 ```
 
-### Mark Collection Changes
+### Mark collection changes
 ```csharp
 // Addition
 mementor.ElementAdd(screen, shape);
@@ -61,7 +61,7 @@ mementor.ElementIndexChange(screen, shape);
 // Index change with explicit index (to be restored to when undo)
 mementor.ElementIndexChange(screen, shape, index);
 ```
-### Perform Undo and Redo
+### Perform undo and redo
 ```csharp
 // Undo the last event
 if (mementor.CanUndo) mementor.Undo();
@@ -77,7 +77,7 @@ At any point of time, you can reset a `Mementor` to its original state.
 mementor.Reset();
 ```
 
-### Batch Marking
+### Batch multiple changes
 
 If you want to undo multiple events at once, batch them together.
 ```csharp
@@ -96,7 +96,7 @@ mementor.EndBatch();
 
 ```
 
-### Disable Marking
+### Disable change marking
 
 If you want to temporarily disable marking (effectively making `Mementor` ignores
 all calls to change marking methods like `PropertyChange`), do one of the followings.
@@ -108,7 +108,7 @@ mementor.ExecuteNoTrack(() => {
 mementor.IsTrackingEnabled = false;
 ```
 
-### Event Handling
+### Event handling
 
 You can be notified when there is change to the undo/redo stack of a `Mementor` 
 by handling its `Changed` event. For example if you call `Undo()`, this event
@@ -119,7 +119,7 @@ mementor.Changed += (_, args) => {
 }
 ```
 
-### Custom Mementor Events
+### Custom events
 
 You can write your own custom event by extending `Memento.BaseEvent` class.
 Then you can use it with a `Mementor` as follows.
