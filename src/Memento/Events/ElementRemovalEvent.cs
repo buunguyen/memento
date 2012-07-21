@@ -41,11 +41,11 @@
             Index = index.Value;
         }
 
-        protected internal override IEnumerable<BaseEvent> Rollback()
+        protected internal override BaseEvent Rollback()
         {
-            var reverseEvent = new ElementAdditionEvent<T>(Collection, Element);
+            var reverse = new ElementAdditionEvent<T>(Collection, Element);
             Collection.Insert(Index, Element);
-            yield return reverseEvent;
+            return reverse;
         }
     }
 }

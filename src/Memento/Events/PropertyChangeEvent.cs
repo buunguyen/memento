@@ -39,11 +39,11 @@
             PropertyValue = propertyValue ?? PropertyInfo().GetValue(target, null);
         }
 
-        protected internal override IEnumerable<BaseEvent> Rollback()
+        protected internal override BaseEvent Rollback()
         {
-            var reverseEvent = new PropertyChangeEvent(TargetObject, PropertyName);
+            var reverse = new PropertyChangeEvent(TargetObject, PropertyName);
             PropertyInfo().SetValue(TargetObject, PropertyValue, null);
-            yield return reverseEvent;
+            return reverse;
         }
 
         private PropertyInfo PropertyInfo()

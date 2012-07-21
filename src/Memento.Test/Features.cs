@@ -474,6 +474,47 @@ namespace Memento.Test
             m.Redo();
         }
 
+        [TestMethod]
+        public void Should_throw_if_invalid_rollback_return_type()
+        {
+            m.Batch(() => {
+                new Circle() {Radius = 10, Center = new Point(10, 10)};
+            });
+            BatchEvent batchEvent = null;
+            MementorChanged changed = (_, args) => {
+                batchEvent = (BatchEvent) args.Event;
+            };
+            m.Changed += changed;
+            m.Undo();
+            Assert.IsNotNull(batchEvent);
+
+            m.Changed -= changed;
+            var customEvent = new InvalidCustomEvent(batchEvent);
+            m.MarkEvent(customEvent);
+
+            try
+            {
+                m.Undo();
+                Assert.Fail("Expected InvalidOperationException");
+            }
+            catch (InvalidOperationException) {
+            }
+
+            m.Reset();
+            m.Batch(() => {
+                m.MarkEvent(customEvent);
+                m.MarkEvent(customEvent);
+            });
+            try
+            {
+                m.Undo();
+                Assert.Fail("Expected InvalidOperationException");
+            }
+            catch (InvalidOperationException)
+            {
+            }
+        }
+
         #region Helper
 
         private Features UndoCount(int c)

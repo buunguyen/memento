@@ -1,6 +1,7 @@
 namespace Memento
 {
     using System;
+    using System.Linq;
 
     /// <summary>
     /// Provides undo and redo services.
@@ -56,7 +57,7 @@ namespace Memento
             }
             finally {
                 // Must not call EndBatch() because CheckPreconditions() might return false
-                BatchEvent @event = InternalEndBatch(_undoStack);
+                BaseEvent @event = InternalEndBatch(_undoStack);
                 if (@event != null)
                     PerformPostMarkAction(@event);
             }
@@ -83,7 +84,7 @@ namespace Memento
             if (!IsTrackingEnabled) return;
             if (IsInBatch) throw new InvalidOperationException("A batch has not been started yet");
 
-            BatchEvent @event = InternalEndBatch(_undoStack);
+            BaseEvent @event = InternalEndBatch(_undoStack);
             if (@event != null)
                 PerformPostMarkAction(@event);
         }
@@ -209,29 +210,33 @@ namespace Memento
 
         private void RollbackEvent(BaseEvent @event, bool undoing)
         {
-            bool isBatch = @event is BatchEvent;
-            var stack = undoing ? _redoStack : _undoStack;
-            if (isBatch) BeginBatch();
-            try {
-                ExecuteNoTrack(() => {
-                    foreach (var reverseEvent in @event.Rollback())
-                        (_currentBatch ?? stack).Push(reverseEvent);
-                });
-            } 
-            finally {
-                if (isBatch) InternalEndBatch(stack);
-            }
+            ExecuteNoTrack(() => {
+                var reverse = @event.Rollback();
+                if (reverse == null) return;
+                if (reverse is BatchEvent)
+                {
+                    if (!(@event is BatchEvent))
+                        throw new InvalidOperationException("Must not return BatchEvent in Rollback()");
+                    reverse = ProcessBatch((BatchEvent) reverse);
+                    if (reverse == null) return;
+                }
+                (undoing ? _redoStack : _undoStack).Push(reverse);
+            });
         }
 
-        private BatchEvent InternalEndBatch(BatchEvent stack)
+        private BaseEvent InternalEndBatch(BatchEvent stack)
         {
-            if (_currentBatch.Count > 0) {
-                var tmp = _currentBatch;
-                stack.Push(_currentBatch);
-                _currentBatch = null;
-                return tmp;
-            }
-            return null;
+            BaseEvent processed = ProcessBatch(_currentBatch);
+            if (processed != null) stack.Push(processed);
+            _currentBatch = null;
+            return processed;
+        }
+
+        private BaseEvent ProcessBatch(BatchEvent batchEvent)
+        {
+            if (batchEvent.Count == 0) return null;
+            if (batchEvent.Count == 1) return batchEvent.Pop();
+            return batchEvent;
         }
 
         private void PerformPostMarkAction(BaseEvent @event)

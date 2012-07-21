@@ -1,5 +1,6 @@
 ﻿namespace Memento
 {
+    using System;
     using System.Collections;
     using System.Collections.Generic;
     using System.Linq;
@@ -41,11 +42,16 @@
             _events.Clear();
         }
 
-        protected internal override IEnumerable<BaseEvent> Rollback()
+        protected internal override BaseEvent Rollback()
         {
-            while (Count > 0)
-                foreach (var reverseEvent in Pop().Rollback())
-                    yield return reverseEvent;
+            var batch = new BatchEvent();
+            while (Count > 0) {
+                var reverse = Pop().Rollback();
+                if (reverse == null) continue;
+                if (reverse is BatchEvent) throw new InvalidOperationException("Must not return BatchEvent in Rollback()");
+                batch.Push(reverse);
+            } 
+            return batch;
         }
 
         /// <summary>

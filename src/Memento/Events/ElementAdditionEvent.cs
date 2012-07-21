@@ -30,11 +30,11 @@
             Element = element;
         }
 
-        protected internal override IEnumerable<BaseEvent> Rollback()
+        protected internal override BaseEvent Rollback()
         {
-            var reverseEvent = new ElementRemovalEvent<T>(Collection, Element);
+            var reverse = new ElementRemovalEvent<T>(Collection, Element);
             Collection.Remove(Element);
-            yield return reverseEvent;
+            return reverse;
         }
     }
 }

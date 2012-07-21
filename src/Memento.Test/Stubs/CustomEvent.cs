@@ -1,7 +1,5 @@
 ﻿namespace Memento.Test.Stubs
 {
-    using System.Collections.Generic;
-
     internal class CustomEvent : BaseEvent
     {
         public bool IsRolledback { get; set; }
@@ -12,10 +10,10 @@
             ReverseEvent = reverseEvent;
         }
 
-        protected override IEnumerable<BaseEvent> Rollback()
+        protected override BaseEvent Rollback()
         {
             IsRolledback = true;
-            yield return ReverseEvent;
+            return ReverseEvent;
         }
     }
 }
