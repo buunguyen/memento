@@ -1,6 +1,6 @@
 echo off
 set MSBUILD="%SystemRoot%\Microsoft.NET\Framework\v4.0.30319\MSBuild.exe"
-set MSTEST="C:\Program Files (x86)\Microsoft Visual Studio 10.0\Common7\IDE\MSTest.exe"
+set MSTEST="C:\Program Files (x86)\Microsoft Visual Studio 11.0\Common7\IDE\MSTest.exe"
 
 rem ************** Build ************** 
 set /P BUILD=Do you want to build now [y/n]? 
