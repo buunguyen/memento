@@ -189,6 +189,22 @@ namespace Memento.Test
         }
 
         [TestMethod]
+        [ExpectedException(typeof(InvalidOperationException))]
+        public void Should_throw_if_end_batch_without_starting_one()
+        {
+            m.EndBatch();
+        }
+
+        [TestMethod]
+        public void Should_not_throw_if_end_batch_after_starting_one()
+        {
+            for (var i = 0; i < 10; i++) {
+                m.BeginBatch();
+                m.EndBatch();
+            }
+        }
+
+        [TestMethod]
         public void Should_track_based_on_enabling_setting()
         {
             m.IsTrackingEnabled = false;
@@ -332,6 +348,27 @@ namespace Memento.Test
                 screen.MoveToFront(1);
                 screen.Remove(circle);
             });
+            Assert.AreEqual(1, screen.Shapes.Count);
+            UndoCount(1);
+
+            m.Undo();
+            Assert.AreEqual(0, screen.Shapes.Count);
+        }
+
+        [TestMethod]
+        public void Should_undo_redo_collection_changes_in_explicit_batch()
+        {
+            var screen = new Screen();
+            m.BeginBatch();
+            try {
+                var circle = new Circle();
+                screen.Add(new Circle {Radius = 10});
+                screen.Add(circle);
+                screen.MoveToFront(1);
+                screen.Remove(circle);
+            } finally {
+                m.EndBatch();
+            }
             Assert.AreEqual(1, screen.Shapes.Count);
             UndoCount(1);
 

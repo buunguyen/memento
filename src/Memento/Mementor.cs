@@ -82,7 +82,7 @@ namespace Memento
         public void EndBatch()
         {
             if (!IsTrackingEnabled) return;
-            if (IsInBatch) throw new InvalidOperationException("A batch has not been started yet");
+            if (!IsInBatch) throw new InvalidOperationException("A batch has not been started yet");
 
             BaseEvent @event = InternalEndBatch(_undoStack);
             if (@event != null)
