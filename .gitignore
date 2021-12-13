@@ -14,3 +14,9 @@ _ReSharper.*
 
 # NuGet
 *.nupkg
+
+# Visual Studio
+src/.vs/
+
+# CodeRush
+src/.cr/
